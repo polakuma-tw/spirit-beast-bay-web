@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>靈獸海灣 - 互動測試</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            background-image: url('./img/bg.png');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* 角色立繪：移除 transition，加入 drop-shadow 融入背景 */
+        #character-img {
+            position: absolute;
+            bottom: -20%;
+            right: 5%;
+            height: 110%;
+            object-fit: contain;
+            z-index: 2;
+            /* 利用 drop-shadow 產生邊緣柔化陰影，掩蓋去背瑕疵並增加立體感 */
+            filter: drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.4));
+        }
+
+        #dialogue-area {
+            position: absolute;
+            top: 15%;
+            right: 45%;
+            width: 40%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 3;
+        }
+
+        #speech-bubble {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            line-height: 1.5;
+        }
+        
+        #speech-bubble::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 30px;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            border-left: 20px solid rgba(255, 255, 255, 0.95);
+        }
+
+        #choice-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            border: 2px solid #666;
+            padding: 15px 20px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        .choice-btn:hover {
+            background: #ff9900;
+            border-color: #ffcc00;
+            color: #000;
+            transform: translateX(10px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="dialogue-area">
+            <div id="speech-bubble">對話載入中...</div>
+            <div id="choice-box"></div>
+        </div>
+        <img id="character-img" src="./img/charactar/ch01.png" alt="波樂熊">
+    </div>
+
+    <script>
+        const storyData = {
+            start: {
+                text: "嗨！你的專屬空間建得差不多了，要開始測試網頁版面與角色的互動了嗎？",
+                image: "./img/charactar/ch01.png",
+                choices: [
+                    { text: "▶ 測試一下不同表情", nextScene: "test_expression" },
+                    { text: "▶ 故意寫錯 CSS 看看", nextScene: "confused" },
+                    { text: "▶ 這個構圖我很滿意！", nextScene: "happy" }
+                ]
+            },
+            test_expression: {
+                text: "切換速度是不是變快了？沒有淡入淡出了！",
+                image: "./img/charactar/ch02.png",
+                choices: [
+                    { text: "▶ 換下一個表情看看", nextScene: "confused" },
+                    { text: "▶ 回到最初狀態", nextScene: "start" }
+                ]
+            },
+            confused: {
+                text: "加上邊緣陰影後，白邊是不是沒那麼明顯了？",
+                image: "./img/charactar/ch03.png",
+                choices: [
+                    { text: "▶ 看起來好多了", nextScene: "happy" },
+                    { text: "▶ 我晚點再去 PS 重新輸出", nextScene: "start" }
+                ]
+            },
+            happy: {
+                text: "太棒了！不管是背景的還原度還是切換的流暢感，都非常完美！",
+                image: "./img/charactar/ch04.png",
+                choices: [
+                    { text: "▶ 結束測試，回首頁", nextScene: "start" }
+                ]
+            }
+        };
+
+        const charImg = document.getElementById('character-img');
+        const speechBubble = document.getElementById('speech-bubble');
+        const choiceBox = document.getElementById('choice-box');
+
+        function loadScene(sceneKey) {
+            const scene = storyData[sceneKey];
+            
+            // 1. 更新對話與圖片（直接切換，無延遲）
+            speechBubble.innerText = scene.text;
+            charImg.src = scene.image; 
+
+            // 2. 生成列表按鈕
+            choiceBox.innerHTML = '';
+            scene.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = choice.text;
+                btn.onclick = () => loadScene(choice.nextScene);
+                choiceBox.appendChild(btn);
+            });
+        }
+
+        window.onload = () => {
+            loadScene('start');
+        };
+    </script>
+</body>
+</html>
