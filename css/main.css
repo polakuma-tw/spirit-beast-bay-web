@@ -1,0 +1,65 @@
+/* --- 1. 消除瀏覽器預設黑邊/白邊 --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 隱藏系統滾動條，讓畫面像遊戲一樣固定 */
+}
+
+/* --- 2. 滿版背景設定 --- */
+.immersive-bg {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../img/bg.png');
+  background-size: cover;      /* 核心：等比例放大填滿，絕對不會有黑邊 */
+  background-position: center; /* 確保背景圖的核心構圖永遠在中央 */
+  background-repeat: no-repeat;
+  position: relative;          /* 作為內部元素的定位基準 */
+}
+
+/* --- 3. 角色與對話框的連動系統 --- */
+.character-system {
+  position: absolute;
+  right: 5%;      /* 讓角色保持在畫面右側 */
+  bottom: 0;      /* 角色腳部貼齊畫面底端 */
+  display: flex;
+  align-items: flex-start; /* 讓內部的對話框可以對齊上方 */
+}
+
+/* 角色立繪尺寸 */
+.character-img {
+  height: 85vh;   /* 依照視窗高度縮放，確保頭部不會超出螢幕 */
+  max-height: 900px;
+  object-fit: contain; /* 保持角色比例不變形 */
+  z-index: 1;
+}
+
+/* --- 4. 對話氣泡定位 (鎖定在頭部左上) --- */
+.dialog-box {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 12px;
+  width: 300px;
+  /* 利用邊距將對話框推到精準位置 */
+  margin-top: 10vh;    /* 對齊角色頭部高度 */
+  margin-right: -20px; /* 稍微重疊，讓氣泡尾巴能精準對著角色的臉 */
+  z-index: 2;          /* 確保對話框蓋在角色上方，但不遮擋臉部 */
+}
+
+/* 當螢幕寬度小於 768px (手機/平板直立) 時觸發 */
+@media (max-width: 768px) {
+  .character-system {
+    right: -10%; /* 手機畫面窄，允許角色身體右側稍微切出畫面邊緣，保留左側空間給對話框 */
+  }
+  
+  .character-img {
+    height: 60vh; /* 手機版角色高度縮小 */
+  }
+
+  .dialog-box {
+    width: 220px; /* 手機版對話框變窄 */
+    margin-top: 5vh;
+    margin-right: 0px; 
+  }
+}
