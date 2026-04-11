@@ -96,3 +96,19 @@ html, body {
     #dialog-text { font-size: 14px; }
     .player-options button { font-size: 13px; padding: 8px 12px; }
 }
+/* 沉浸式邊緣修復：多重陰影遮蓋 */
+.fix-white-edge {
+    /* 原理：
+       1-4 層：往四個對角線方向各推 1px 的實色陰影，強制壓住白邊。
+       第 5 層：加上一層微弱的環境擴散陰影，讓角色融入背景氣氛。
+    */
+    filter: 
+        drop-shadow(1px 1px 0px rgba(45, 27, 13, 0.9))   /* 右下：深褐色環境色 */
+        drop-shadow(-1px -1px 0px rgba(45, 27, 13, 0.9)) /* 左上 */
+        drop-shadow(1px -1px 0px rgba(45, 27, 13, 0.9))  /* 右上 */
+        drop-shadow(-1px 1px 0px rgba(45, 27, 13, 0.9))  /* 左下 */
+        drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));         /* 柔和整體的環境光 */
+    
+    /* 確保立繪渲染品質 */
+    image-rendering: -webkit-optimize-contrast;
+}
