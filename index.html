@@ -1,42 +1,40 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>靈獸海灣 - 表情測試</title>
-  <link rel="stylesheet" href="css/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>靈獸海灣 - 沉浸式架構</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  
-  <div class="immersive-bg">
-    
-    <div class="character-wrapper">
-      <img id="npc-img" src="img/charactar/ch01.png" class="character-img" alt="角色">
+
+    <div class="immersive-bg">
+        <div class="game-view">
+            
+            <div class="character-section">
+                <img id="npc-img" src="img/charactar/ch01.png" alt="角色立繪">
+            </div>
+
+            <div class="ui-section">
+                <div class="dialog-bubble">
+                    <p id="dialog-text">歡迎回來，波樂熊。<br>今天的構圖還滿意嗎？</p>
+                </div>
+                
+                <div class="player-options">
+                    <button onclick="changeReaction('img/charactar/ch01.png', '這是我目前的個人網站實驗環境。')">● 查看目前的架構</button>
+                    <button onclick="changeReaction('img/charactar/ch02.png', '太棒了！比例現在看起來很舒服。')">● 選項二：表示滿意</button>
+                    <button onclick="changeReaction('img/charactar/ch03.png', '還在微調中...請再等我一下。')">● 選項三：繼續優化</button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div class="dialog-ui-group">
-      
-      <div class="dialog-bubble">
-        <p class="npc-text" id="dialog-text">歡迎來到靈獸海灣！有什麼我可以幫忙的嗎？</p>
-      </div>
-      
-      <div class="player-options">
-        <button onclick="changeReaction('img/charactar/ch01.png', '歡迎來到靈獸海灣！有什麼我可以幫忙的嗎？')">● 我想看看屋子的架構</button>
-        <button onclick="changeReaction('img/charactar/ch02.png', '好的！馬上為您準備。')">● 選項二：開心同意</button>
-        <button onclick="changeReaction('img/charactar/ch03.png', '這...這個功能還在開發中。')">● 選項三：疑惑思考</button>
-        <button onclick="changeReaction('img/charactar/ch04.png', '那麼，期待您下次光臨。')">● 選項四：道別離開</button>
-      </div>
-
-    </div>
-
-  </div>
-
-  <script>
-    function changeReaction(imagePath, newText) {
-      document.getElementById('npc-img').src = imagePath;
-      document.getElementById('dialog-text').innerText = newText;
-    }
-  </script>
-
+    <script>
+        function changeReaction(imagePath, newText) {
+            document.getElementById('npc-img').src = imagePath;
+            document.getElementById('dialog-text').innerHTML = newText;
+        }
+    </script>
 </body>
 </html>
