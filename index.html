@@ -4,35 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>靈獸海灣 - 表情測試</title>
-  
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
   
   <div class="immersive-bg">
-    <div class="character-system">
+    
+    <div class="character-wrapper">
+      <img id="npc-img" src="img/charactar/ch01.png" class="character-img" alt="角色">
+    </div>
+
+    <div class="dialog-ui-group">
       
-      <div class="dialog-box">
+      <div class="dialog-bubble">
         <p class="npc-text" id="dialog-text">歡迎來到靈獸海灣！有什麼我可以幫忙的嗎？</p>
-        
-        <div class="player-options">
-          <button onclick="changeReaction('img/charactar/ch01.png', '歡迎來到靈獸海灣！有什麼我可以幫忙的嗎？')">選項一：預設</button>
-          <button onclick="changeReaction('img/charactar/ch02.png', '太好了！馬上為您準備。')">選項二：開心</button>
-          <button onclick="changeReaction('img/charactar/ch03.png', '等等，這樣做不太好吧？')">選項三：疑惑/生氣</button>
-          <button onclick="changeReaction('img/charactar/ch04.png', '那麼，期待您下次光臨。')">選項四：道別</button>
-        </div>
+      </div>
+      
+      <div class="player-options">
+        <button onclick="changeReaction('img/charactar/ch01.png', '歡迎來到靈獸海灣！有什麼我可以幫忙的嗎？')">● 我想看看屋子的架構</button>
+        <button onclick="changeReaction('img/charactar/ch02.png', '好的！馬上為您準備。')">● 選項二：開心同意</button>
+        <button onclick="changeReaction('img/charactar/ch03.png', '這...這個功能還在開發中。')">● 選項三：疑惑思考</button>
+        <button onclick="changeReaction('img/charactar/ch04.png', '那麼，期待您下次光臨。')">● 選項四：道別離開</button>
       </div>
 
-      <img id="npc-img" src="img/charactar/ch01.png" class="character-img" alt="角色">
-      
     </div>
+
   </div>
 
   <script>
     function changeReaction(imagePath, newText) {
-      // 1. 替換圖片
       document.getElementById('npc-img').src = imagePath;
-      // 2. 替換對話框文字 (選用，讓沉浸感更好)
       document.getElementById('dialog-text').innerText = newText;
     }
   </script>
