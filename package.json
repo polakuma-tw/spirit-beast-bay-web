@@ -1,0 +1,30 @@
+{
+  "name": "pola-site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:data": "node build-gallery-data.js",
+    "dev": "node server.js",
+    "admin": "node server.js",
+    "start": "node build-gallery-data.js && node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/polakuma-tw/spirit-beast-bay-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/polakuma-tw/spirit-beast-bay-web/issues"
+  },
+  "homepage": "https://github.com/polakuma-tw/spirit-beast-bay-web#readme",
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "express": "^5.2.1",
+    "sharp": "^0.35.3"
+  }
+}

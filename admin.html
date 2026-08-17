@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolaKuma 作品上傳後台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Cropper.js (v1.5.13, jsdelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #f3c343;
+      --accent2: #e8a52a;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --success: #3fb950;
+      --error: #f85149;
+      --radius: 14px;
+    }
+
+    /* === 裁切 Modal === */
+    #crop-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #crop-modal.open {
+      display: flex;
+    }
+
+    .crop-modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: min(90vw, 680px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .crop-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .crop-container {
+      width: 100%;
+      height: 55vh;
+      border-radius: 10px;
+      background: #000;
+      position: relative;
+    }
+
+    #crop-image {
+      display: block;
+      max-width: 100%;
+    }
+
+    .crop-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .crop-btn {
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .crop-btn-cancel {
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .crop-btn-cancel:hover {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .crop-btn-confirm {
+      background: var(--accent);
+      color: #1a1100;
+    }
+
+    .crop-btn-confirm:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(243, 195, 67, 0.3);
+    }
+
+    .crop-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* === 鎖定畫面 === */
+    #lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    #lock-screen.hidden {
+      display: none;
+    }
+
+    .lock-logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .lock-logo span {
+      color: var(--accent);
+    }
+
+    .lock-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .lock-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 320px;
+    }
+
+    .lock-input {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+
+    .lock-input:focus {
+      border-color: var(--accent);
+    }
+
+    .lock-btn {
+      background: var(--accent);
+      color: #1a1100;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: var(--radius);
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lock-btn:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(243, 195, 67, 0.3);
+    }
+
+    .lock-error {
+      color: var(--error);
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    /* === 主介面 === */
+    #app {
+      display: none;
+      width: 100%;
+      max-width: 860px;
+      padding: 40px 20px 80px;
+      gap: 28px;
+      flex-direction: column;
+    }
+
+    #app.visible {
+      display: flex;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .page-title span {
+      color: var(--accent);
+    }
+
+    .header-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* 欄位 */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    .input-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 拖曳區 */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(243, 195, 67, 0.05);
+    }
+
+    .drop-icon {
+      font-size: 2rem;
+    }
+
+    .drop-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .drop-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 預覽區 */
+    .preview-area {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .preview-item {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+    }
+
+    .preview-item img {
+      display: block;
+    }
+
+    .preview-item.cover-preview img {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .preview-item.photo-preview img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+    }
+
+    .preview-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+
+    /* 進度 */
+    .compress-status {
+      margin-top: 10px;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      min-height: 1.4em;
+      transition: color 0.2s;
+    }
+
+    .compress-status.ok {
+      color: var(--success);
+    }
+
+    .compress-status.err {
+      color: var(--error);
+    }
+
+    /* 上傳按鈕 */
+    .upload-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: #1a1100;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .upload-btn:hover:not(:disabled) {
+      background: var(--accent2);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(243, 195, 67, 0.35);
+    }
+
+    .upload-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 進度列 */
+    .progress-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-wrap.visible {
+      display: flex;
+    }
+
+    .progress-bar-bg {
+      background: var(--surface2);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* 訊息 log */
+    #log-area {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 0.82rem;
+      font-family: monospace;
+      line-height: 1.6;
+      max-height: 180px;
+      overflow-y: auto;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    #log-area.visible {
+      display: block;
+    }
+
+    .log-ok {
+      color: var(--success);
+    }
+
+    .log-err {
+      color: var(--error);
+    }
+
+    .log-info {
+      color: #79c0ff;
+    }
+
+    /* 作品列表 */
+    #gallery-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .gallery-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s;
+      position: relative;
+    }
+
+    .gallery-card-del {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: var(--error);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+    .gallery-card:hover .gallery-card-del { opacity: 1; }
+
+    .gallery-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-card-body {
+      padding: 8px 10px;
+    }
+
+    .gallery-card-id {
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .gallery-card-name {
+      font-size: 0.82rem;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gallery-card-count {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .gallery-empty {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 30px 0;
+      grid-column: 1/-1;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 鎖定畫面 -->
+  <div id="lock-screen">
+    <div class="lock-logo">Pola<span>Kuma</span></div>
+    <div class="lock-subtitle">🐾 創作者後台管理系統</div>
+    <div class="lock-form">
+      <input id="pw-input" class="lock-input" type="password" placeholder="輸入存取密碼" autocomplete="current-password">
+      <button class="lock-btn" onclick="checkPassword()">進入後台</button>
+      <div id="lock-error" class="lock-error"></div>
+    </div>
+  </div>
+
+  <!-- 主介面 -->
+  <div id="app">
+    <header class="page-header">
+      <div class="page-title">Pola<span>Kuma</span> 作品上傳後台</div>
+      <div class="header-badge">🐾 創作者友善模式</div>
+    </header>
+
+    <!-- 步驟一：基本資訊 -->
+    <div class="card">
+      <div class="card-title">① 作品資訊</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="num-input">作品編號</label>
+          <input id="num-input" type="number" min="1" max="9999" placeholder="例如：000">
+          <div class="input-hint">將自動格式化為 3-4 碼，如 000</div>
+        </div>
+        <div class="form-group">
+          <label for="name-input">作品名稱</label>
+          <input id="name-input" type="text" placeholder="例如：波樂熊">
+          <div class="input-hint">將建立資料夾：000波樂熊</div>
+        </div>
+        <div class="form-group full">
+          <div id="folder-preview" style="font-size:0.85rem; color: var(--accent); min-height:1.4em;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 裁切 Modal -->
+    <div id="crop-modal">
+      <div class="crop-modal-box">
+        <div class="crop-modal-title">✂️ 裁切封面圖</div>
+        <div class="crop-container" id="crop-container">
+          <!-- img 標籤將透過 JS 動態重建以防止 DOM 污染 -->
+        </div>
+        <div class="crop-hint">拖曳移動・滾輪縮放・拖曳邊角調整裁切範圍</div>
+        <div class="crop-actions">
+          <button class="crop-btn crop-btn-cancel" id="crop-cancel">取消</button>
+          <button class="crop-btn crop-btn-confirm" id="crop-confirm">✅ 確認裁切並壓縮</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 步驟二：封面上傳 -->
+    <div class="card">
+      <div class="card-title">② 封面底圖（水晶球顯示）</div>
+      <div class="drop-zone" id="cover-zone">
+        <input type="file" id="cover-file" accept="image/*">
+        <div class="drop-icon">🖼️</div>
+        <div class="drop-label">拖曳封面圖片到此處</div>
+        <div class="drop-sub">選取後會跳出裁切框，裁切完成再壓縮為 WebP</div>
+      </div>
+      <div class="compress-status" id="cover-status"></div>
+      <div class="preview-area" id="cover-preview"></div>
+    </div>
+
+    <!-- 步驟三：相片牆 -->
+    <div class="card">
+      <div class="card-title">③ 相片牆展示圖（可多張）</div>
+      <div class="drop-zone" id="photos-zone">
+        <input type="file" id="photos-file" accept="image/*" multiple>
+        <div class="drop-icon">📸</div>
+        <div class="drop-label">拖曳多張展示圖片到此處</div>
+        <div class="drop-sub">自動壓縮至長邊 2048px、轉換為 WebP 格式</div>
+      </div>
+      <div class="compress-status" id="photos-status"></div>
+      <div class="preview-area" id="photos-preview"></div>
+    </div>
+
+    <!-- 上傳按鈕 -->
+    <div class="card">
+      <div class="card-title">④ 執行上傳</div>
+      <button class="upload-btn" id="upload-btn" onclick="startUpload()">
+        <span>🚀</span><span>壓縮並上傳作品</span>
+      </button>
+      <div class="progress-wrap" id="progress-wrap" style="margin-top:16px;">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+        <div class="progress-label" id="progress-label">準備中...</div>
+      </div>
+      <div id="log-area" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- 現有作品列表 -->
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>現有作品列表</span>
+        <button onclick="loadGalleryList()"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:4px 12px;font-size:0.8rem;cursor:pointer;">重新整理</button>
+      </div>
+      <div id="gallery-list">
+        <div class="gallery-empty">載入中...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 密碼驗證
+    // ============================================================
+    const ADMIN_TOKEN = 'polakuma2025';
+
+    function checkPassword() {
+      const val = document.getElementById('pw-input').value;
+      if (val === ADMIN_TOKEN) {
+        document.getElementById('lock-screen').classList.add('hidden');
+        document.getElementById('app').classList.add('visible');
+        loadGalleryList();
+      } else {
+        document.getElementById('lock-error').textContent = '密碼錯誤，請重試';
+        setTimeout(() => document.getElementById('lock-error').textContent = '', 2000);
+      }
+    }
+    document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
+
+    // ============================================================
+    // 資料夾名稱預覽
+    // ============================================================
+    function getFolderName() {
+      const num = document.getElementById('num-input').value.trim();
+      const name = document.getElementById('name-input').value.trim();
+      if (!num || !name) return null;
+      const padded = num.padStart(3, '0');
+      return `${padded}${name}`;
+    }
+    function updateFolderPreview() {
+      const fn = getFolderName();
+      const el = document.getElementById('folder-preview');
+      el.textContent = fn ? `📁 gallery-omakase/${fn}/` : '';
+    }
+    document.getElementById('num-input').addEventListener('input', updateFolderPreview);
+    document.getElementById('name-input').addEventListener('input', updateFolderPreview);
+
+    // ============================================================
+    // 圖片壓縮核心
+    // ============================================================
+    function loadImage(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    async function compressImage(file, { maxWidth, maxHeight, quality }) {
+      const img = await loadImage(file);
+      let { width, height } = img;
+
+      if (maxWidth && maxHeight) {
+        const longEdge = Math.max(width, height);
+        const limit = Math.max(maxWidth, maxHeight);
+        if (longEdge > limit) {
+          const ratio = limit / longEdge;
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+      } else if (maxWidth) {
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+      });
+    }
+
+    function blobToDataURL(blob) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // ============================================================
+    // 封面 & 相片牆 狀態與裁切核心
+    // ============================================================
+    let compressedCover = null;
+    let compressedPhotos = [];
+    let cropperInstance = null;
+    let cropperReady = false;
+    let currentCropUrl = null; // 儲存當前圖片記憶體連結
+
+    function openCropModal(file) {
+      const modal = document.getElementById('crop-modal');
+      const confirmBtn = document.getElementById('crop-confirm');
+      const cropContainer = document.getElementById('crop-container');
+
+      // [修正3] 完全重建 img 標籤，徹底避免 Cropper.js 殘留的隱藏節點干擾
+      cropContainer.innerHTML = '<img id="crop-image" src="" alt="crop" style="display:block; max-width:100%;">';
+      const cropImg = document.getElementById('crop-image');
+
+      // 銷毀舊實例
+      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+      cropperReady = false;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '⏳ 圖片載入中...';
+
+      // 清理舊的物件 URL，建立新的
+      if (currentCropUrl) { URL.revokeObjectURL(currentCropUrl); }
+      currentCropUrl = URL.createObjectURL(file);
+
+      // 必須先讓容器 display:flex 出現，Cropper 才能正確計算寬高
+      modal.classList.add('open');
+
+      cropImg.onload = () => {
+        // [修正1] 這裡絕對不能呼叫 URL.revokeObjectURL，否則 Cropper 內部的 clone 圖片會破圖！
+        try {
+          cropperInstance = new Cropper(cropImg, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.85,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            ready() {
+              cropperReady = true;
+              confirmBtn.disabled = false;
+              confirmBtn.textContent = '✅ 確認裁切並壓縮';
+            },
+          });
+        } catch (e) {
+          confirmBtn.textContent = '❌ 初始化失敗';
+          confirmBtn.disabled = true;
+          console.error('[Cropper init error]', e);
+        }
+      };
+
+      cropImg.src = currentCropUrl;
+    }
+
+    function closeCropModal() {
+      const modal = document.getElementById('crop-modal');
+      modal.classList.remove('open');
+      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+      // 關閉時安全釋放記憶體
+      if (currentCropUrl) { URL.revokeObjectURL(currentCropUrl); currentCropUrl = null; }
+    }
+
+    document.getElementById('crop-cancel').addEventListener('click', () => {
+      closeCropModal();
+      document.getElementById('cover-file').value = ''; // [修正3] 清空檔案以便重複選取
+    });
+
+    document.getElementById('crop-confirm').addEventListener('click', async () => {
+      if (!cropperInstance || !cropperReady) return;
+      const statusEl = document.getElementById('cover-status');
+      const previewEl = document.getElementById('cover-preview');
+
+      // 取得裁切後的 canvas
+      const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+      closeCropModal();
+      document.getElementById('cover-file').value = ''; // [修正3] 確認後也清空檔案欄位
+
+      if (!canvas) {
+        statusEl.textContent = '❌ 裁切失敗：無法取得影像';
+        statusEl.className = 'compress-status err';
+        return;
+      }
+
+      statusEl.textContent = '⏳ 壓縮中...'; statusEl.className = 'compress-status';
+      previewEl.innerHTML = '';
+      compressedCover = null;
+
+      try {
+        const scaledCanvas = document.createElement('canvas');
+        const maxW = 800;
+        let w = canvas.width, h = canvas.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        scaledCanvas.width = w; scaledCanvas.height = h;
+        const ctx = scaledCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0, w, h);
+
+        const blob = await new Promise(res => scaledCanvas.toBlob(res, 'image/webp', 0.80));
+        const previewUrl = await blobToDataURL(blob);
+        compressedCover = { blob, filename: 'T.webp', previewUrl };
+
+        const sizeKB = (blob.size / 1024).toFixed(1);
+        statusEl.textContent = `✅ 裁切完成：${w}×${h}px，${sizeKB}KB（WebP）`;
+        statusEl.className = 'compress-status ok';
+
+        previewEl.innerHTML = `
+      <div class="preview-item cover-preview">
+        <img src="${previewUrl}" alt="封面預覽">
+        <div class="preview-badge">T.webp</div>
+      </div>`;
+      } catch (e) {
+        statusEl.textContent = '❌ 壓縮失敗：' + e.message;
+        statusEl.className = 'compress-status err';
+      }
+    });
+
+    function handleCoverFile(files) {
+      if (!files || files.length === 0) return;
+      openCropModal(files[0]);
+    }
+
+    // --- 相片牆 ---
+    async function handlePhotosFiles(files) {
+      if (!files || files.length === 0) return;
+      const statusEl = document.getElementById('photos-status');
+      const previewEl = document.getElementById('photos-preview');
+      statusEl.textContent = `⏳ 壓縮 ${files.length} 張中...`; statusEl.className = 'compress-status';
+      previewEl.innerHTML = '';
+      compressedPhotos = [];
+
+      let done = 0;
+      for (const file of Array.from(files)) {
+        try {
+          const blob = await compressImage(file, { maxWidth: 2048, maxHeight: 2048, quality: 0.82 });
+          const previewUrl = await blobToDataURL(blob);
+          const idx = String(compressedPhotos.length + 1).padStart(2, '0');
+          compressedPhotos.push({ blob, filename: `${idx}.webp`, previewUrl });
+          done++;
+          statusEl.textContent = `⏳ 已壓縮 ${done}/${files.length} 張...`;
+        } catch (e) {
+          log(`❌ 壓縮失敗：${file.name} - ${e.message}`, 'err');
+        }
+      }
+
+      statusEl.textContent = `✅ ${compressedPhotos.length} 張已壓縮完成`;
+      statusEl.className = 'compress-status ok';
+
+      compressedPhotos.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'preview-item photo-preview';
+        div.innerHTML = `<img src="${p.previewUrl}" alt="${p.filename}"><div class="preview-badge">${p.filename}</div>`;
+        previewEl.appendChild(div);
+      });
+    }
+
+    // 拖曳與選擇事件
+    ['cover-zone', 'photos-zone'].forEach(id => {
+      const zone = document.getElementById(id);
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (id === 'cover-zone') handleCoverFile(files);
+        else handlePhotosFiles(files);
+      });
+    });
+    document.getElementById('cover-file').addEventListener('change', e => handleCoverFile(e.target.files));
+    document.getElementById('photos-file').addEventListener('change', e => handlePhotosFiles(e.target.files));
+
+    // ============================================================
+    // 上傳流程
+    // ============================================================
+    function log(msg, type = 'info') {
+      const el = document.getElementById('log-area');
+      el.classList.add('visible');
+      const line = document.createElement('div');
+      line.className = `log-${type}`;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setProgress(pct, label) {
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-label').textContent = label;
+    }
+
+    async function apiPost(url, body, headers = {}) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-Admin-Token': ADMIN_TOKEN, ...headers },
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    async function startUpload() {
+      const num = document.getElementById('num-input').value.trim();
+      const name = document.getElementById('name-input').value.trim();
+
+      if (!num || !name) { alert('請填寫作品編號與名稱'); return; }
+      if (!compressedCover) { alert('請先選擇封面圖片'); return; }
+      if (compressedPhotos.length === 0) { alert('請至少選擇一張展示圖'); return; }
+
+      const padded = num.padStart(3, '0');
+      const folderName = `${padded}${name}`;
+
+      const btn = document.getElementById('upload-btn');
+      btn.disabled = true;
+      document.getElementById('progress-wrap').classList.add('visible');
+      document.getElementById('log-area').innerHTML = '';
+      document.getElementById('log-area').classList.add('visible');
+
+      try {
+        log(`📁 建立資料夾：${folderName}`, 'info');
+        setProgress(5, '建立資料夾...');
+        await apiPost('/api/create-folder', JSON.stringify({ folderName }), { 'Content-Type': 'application/json' });
+        log(`✅ 資料夾已建立`, 'ok');
+
+        // [修正2] 使用 folderName 而不是 code 作為路徑，以對應正確的資料夾名稱
+        setProgress(15, '上傳封面...');
+        log(`🖼️  上傳封面 T.webp (${(compressedCover.blob.size / 1024).toFixed(1)} KB)`, 'info');
+        await apiPost('/api/upload', compressedCover.blob, { 'X-Filename': encodeURIComponent(`${folderName}/T.webp`) });
+        log(`✅ 封面上傳完成`, 'ok');
+
+        const total = compressedPhotos.length;
+        for (let i = 0; i < total; i++) {
+          const p = compressedPhotos[i];
+          const pct = 20 + Math.round((i / total) * 65);
+          setProgress(pct, `上傳展示圖 ${i + 1}/${total}...`);
+          log(`📸 上傳 ${p.filename} (${(p.blob.size / 1024).toFixed(1)} KB)`, 'info');
+          // [修正2] 使用 folderName 作為路徑
+          await apiPost('/api/upload', p.blob, { 'X-Filename': encodeURIComponent(`${folderName}/${p.filename}`) });
+          log(`✅ ${p.filename} 完成`, 'ok');
+        }
+
+        setProgress(90, '更新作品目錄...');
+        log(`🔄 重新產生 gallery-data.json...`, 'info');
+        await apiPost('/api/rebuild', null, {});
+        log(`✅ gallery-data.json 已更新！`, 'ok');
+
+        setProgress(100, '🎉 全部完成！');
+        log(`\n🐾 作品「${folderName}」上傳成功！`, 'ok');
+
+        await loadGalleryList();
+
+      } catch (e) {
+        log(`❌ 上傳失敗：${e.message}`, 'err');
+        setProgress(0, '上傳失敗');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // 現有作品列表
+    // ============================================================
+    async function loadGalleryList() {
+      const el = document.getElementById('gallery-list');
+      el.innerHTML = '<div class="gallery-empty">載入中...</div>';
+      try {
+        const res = await fetch('./gallery-data.json?t=' + Date.now());
+        if (!res.ok) throw new Error('找不到 gallery-data.json');
+        const items = await res.json();
+        if (items.length === 0) {
+          el.innerHTML = '<div class="gallery-empty">尚無作品，快去上傳第一件吧！🐾</div>';
+          return;
+        }
+        el.innerHTML = '';
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'gallery-card';
+          const folderName = item.id.replace('NO.', '') + item.name;
+          const imgSrc = item.cover || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          card.innerHTML = `
+        <button class="gallery-card-del" data-folder="${folderName}" title="刪除此作品">❌</button>
+        <img src="${imgSrc}" alt="${item.name}" onerror="this.style.opacity='0.3'">
+        <div class="gallery-card-body">
+          <div class="gallery-card-id">${item.id}</div>
+          <div class="gallery-card-name">${item.name}</div>
+          <div class="gallery-card-count">📸 ${item.photos.length} 張展示圖</div>
+        </div>`;
+          // 用 addEventListener 綁定，避免 onclick 字串中的引號問題
+          card.querySelector('.gallery-card-del').addEventListener('click', () => deleteGalleryItem(folderName));
+          el.appendChild(card);
+        });
+      } catch (e) {
+        el.innerHTML = `<div class="gallery-empty">⚠️ ${e.message}<br>請先執行 npm run build:data</div>`;
+      }
+    }
+
+    // ============================================================
+    // 刪除作品
+    // ============================================================
+    async function deleteGalleryItem(folderName) {
+      if (!confirm(`🚨 確定要永久刪除「${folderName}」嗎？此動作無法復原！`)) return;
+
+      const btn = document.getElementById('upload-btn');
+      btn.disabled = true;
+
+      try {
+        await apiPost('/api/delete-folder', JSON.stringify({ folderName }), { 'Content-Type': 'application/json' });
+        await apiPost('/api/rebuild', null, {});
+        await loadGalleryList();
+        alert(`✅ 「${folderName}」 已成功刪除`);
+      } catch (e) {
+        alert(`❌ 刪除失敗：${e.message}`);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+
+</html>
